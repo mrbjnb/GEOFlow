@@ -21,6 +21,8 @@
 /public/build
 /public/hot
 /public/storage
+/memory-bank/tasks
+/.playwright-mcp
 /storage/*.key
 /storage/pail
 /vendor
