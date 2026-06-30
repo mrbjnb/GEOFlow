@@ -52,6 +52,7 @@
 - [x] Full edit/show Blade UI for social channels
 - [x] Upstream merge: yaojingang/GEOFlow main synced (June 30, 2026)
 - [x] Docker stability fixes: healthcheck start_period + pg_isready timeout (June 30, 2026)
+- [x] Database re-seed: restored admin user + demo content after named volume migration (June 30, 2026)
 
 ## What's Left to Build ⏳
 - [ ] Start containers and verify performance improvement (optional, already validated on demand)
