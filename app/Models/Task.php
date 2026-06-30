@@ -31,6 +31,8 @@ class Task extends Model
         'model_selection_mode',
         'status',
         'publish_scope',
+        'distribution_strategy',
+        'distribution_cursor',
         'created_count',
         'published_count',
         'loop_count',
@@ -64,6 +66,7 @@ class Task extends Model
             'draft_limit' => 'integer',
             'article_limit' => 'integer',
             'is_loop' => 'integer',
+            'distribution_cursor' => 'integer',
             'created_count' => 'integer',
             'published_count' => 'integer',
             'loop_count' => 'integer',
@@ -114,6 +117,15 @@ class Task extends Model
         return $this->belongsTo(KnowledgeBase::class, 'knowledge_base_id');
     }
 
+    public function knowledgeBases(): BelongsToMany
+    {
+        return $this->belongsToMany(KnowledgeBase::class, 'task_knowledge_bases')
+            ->withPivot(['sort_order'])
+            ->withTimestamps()
+            ->orderByPivot('sort_order')
+            ->orderBy('knowledge_bases.id');
+    }
+
     public function fixedCategory(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'fixed_category_id');
@@ -137,7 +149,9 @@ class Task extends Model
     public function distributionChannels(): BelongsToMany
     {
         return $this->belongsToMany(DistributionChannel::class, 'task_distribution_channels')
-            ->withPivot(['trigger', 'remote_status', 'failure_policy', 'max_attempts'])
-            ->withTimestamps();
+            ->withPivot(['trigger', 'remote_status', 'failure_policy', 'max_attempts', 'sort_order'])
+            ->withTimestamps()
+            ->orderByPivot('sort_order')
+            ->orderBy('distribution_channels.id');
     }
 }
