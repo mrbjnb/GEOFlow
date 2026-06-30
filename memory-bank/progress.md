@@ -33,7 +33,12 @@
 - **Fixes**: Fixed @php() Blade syntax bug in edit/show views (6 instances), fixed public/storage build context issue
 - **Tests**: All 85 distribution tests pass (fixed false-positive assertion on package_hint text overlap)
 - **Production**: Multi-stage Docker image builds and runs successfully (verified with HTTP 200)
-- **Push**: All changes pushed to origin/main (commit ec04a64)
+- **Push**: All changes pushed to origin/main (commit ec04a64 + a90e9dc)
+
+### Docker Stability Fixes (June 30, 2026)
+- **Healthcheck start_period**: Added `start_period: 30s` to postgres and `start_period: 10s` to redis healthchecks in both dev and prod compose files. Prevents containers from being marked unhealthy during first-time initialization.
+- **pg_isready timeout**: Added 120-second timeout to the `pg_isready` wait loop in both entrypoint.sh and entrypoint.prod.sh. Prevents indefinite hangs if PostgreSQL fails to start.
+- **Compose wait-timeout**: Added `--wait-timeout 300` flag to `docker compose up -d` commands for production, capping the maximum startup wait at 5 minutes.
 
 ## Known Issues 🐛
 1. **6 failing tests** — `AdminSystemUpdatesPageTest` — edge-case self-update feature where queue jobs don't execute synchronously. Pre-existing, unrelated to all changes.
@@ -46,6 +51,7 @@
 - [x] Publish/update/delete tests for both platforms
 - [x] Full edit/show Blade UI for social channels
 - [x] Upstream merge: yaojingang/GEOFlow main synced (June 30, 2026)
+- [x] Docker stability fixes: healthcheck start_period + pg_isready timeout (June 30, 2026)
 
 ## What's Left to Build ⏳
 - [ ] Start containers and verify performance improvement (optional, already validated on demand)
