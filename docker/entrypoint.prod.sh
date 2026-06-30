@@ -60,8 +60,15 @@ if [ "${AUTO_WAIT_FOR_DB:-true}" = "true" ] && [ "${DB_CONNECTION:-}" = "pgsql" 
   DB_NAME_VALUE="${DB_DATABASE:-postgres}"
 
   echo "[entrypoint-prod] waiting for postgres at ${DB_HOST_VALUE}:${DB_PORT_VALUE}"
+  DB_WAIT_RETRIES=0
+  DB_WAIT_MAX_RETRIES=60
   until pg_isready -h "${DB_HOST_VALUE}" -p "${DB_PORT_VALUE}" -U "${DB_USER_VALUE}" -d "${DB_NAME_VALUE}" >/dev/null 2>&1; do
     sleep 2
+    DB_WAIT_RETRIES=$((DB_WAIT_RETRIES + 1))
+    if [ "$DB_WAIT_RETRIES" -ge "$DB_WAIT_MAX_RETRIES" ]; then
+      echo "[entrypoint-prod] ERROR: postgres not ready after $((DB_WAIT_MAX_RETRIES * 2)) seconds"
+      exit 1
+    fi
   done
 fi
 

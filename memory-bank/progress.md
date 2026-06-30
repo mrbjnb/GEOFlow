@@ -9,8 +9,9 @@
 - ✅ **Social Media Distribution**: Facebook Page + Blogger channel types implemented
 - ✅ **OAuth2 auto-refresh**: Google + Facebook token refresh in OAuthTokenRefreshService
 - ✅ **Review fixes applied**: 2 showstopper bugs fixed, 11 new tests, missing Blade views added
+- ✅ **Upstream merge (TASK006)**: Merged yaojingang/GEOFlow main (b865cec..7a8f6ff), 5 additive migrations applied, social media channels preserved, 85 distribution tests pass, production build verified
 
-## Latest Completed: Social Media Distribution (TASK003 + TASK004)
+## Latest Completed: Upstream Merge (TASK006)
 
 ### Social Media Distribution (June 29, 2026)
 - **Feature**: Blogger (full article publish via Blogger API v3) + Facebook Page (text + photo post via Graph API v24)
@@ -26,6 +27,14 @@
 - **Tests**: 11 new publish/update/delete tests for both publishers
 - **Validation**: 365 tests pass (0 regression)
 
+### Upstream Merge (June 30, 2026)
+- **Merge**: yaojingang/GEOFlow main merged (b865cec..7a8f6ff) — CLEAN (no conflicts)
+- **Migrations**: 5 new upstream migrations applied (all additive — new tables + columns with defaults)
+- **Fixes**: Fixed @php() Blade syntax bug in edit/show views (6 instances), fixed public/storage build context issue
+- **Tests**: All 85 distribution tests pass (fixed false-positive assertion on package_hint text overlap)
+- **Production**: Multi-stage Docker image builds and runs successfully (verified with HTTP 200)
+- **Push**: All changes pushed to origin/main (commit ec04a64)
+
 ## Known Issues 🐛
 1. **6 failing tests** — `AdminSystemUpdatesPageTest` — edge-case self-update feature where queue jobs don't execute synchronously. Pre-existing, unrelated to all changes.
 
@@ -36,8 +45,8 @@
 - [x] OAuth2 token auto-refresh for social platforms
 - [x] Publish/update/delete tests for both platforms
 - [x] Full edit/show Blade UI for social channels
+- [x] Upstream merge: yaojingang/GEOFlow main synced (June 30, 2026)
 
 ## What's Left to Build ⏳
-- [ ] **TASK006 — Merge upstream `yaojingang/GEOFlow` main** (in progress)
 - [ ] Start containers and verify performance improvement (optional, already validated on demand)
 - [ ] Investigate 6 failing tests (optional, low priority, unrelated to changes)

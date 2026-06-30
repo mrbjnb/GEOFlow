@@ -29,11 +29,8 @@
 - ✅ **365 tests pass** (0 regression, 8 pre-existing AdminSystemUpdatesPageTest failures)
 
 ## Next Steps
-- **ACTIVE NOW: TASK006 — Merge upstream `yaojingang/GEOFlow` main while preserving social media channels**
-  - Plan: `docs/superpowers/plans/2026-06-29-update-upstream-preserve-social-channels.md`
-  - Verified: merge is clean (`git merge-tree` → exit 0), 8 files will conflict on stash pop
-  - Safety: upstream seeding is protected (PR #47), all migrations are additive
-  - Task: see `memory-bank/tasks/TASK006-upstream-merge.md`
+- **TASK006 completed — upstream merge, tests pass, production build verified**
+- N/A — Upstream merge complete. Social media features preserved. All 85 distribution tests pass. Production builds successfully.
 
 ## Current Decisions & Considerations
 - **OAuth tokens**: Stored as encrypted JSON envelope in existing `secret_ciphertext` column — no migration needed
