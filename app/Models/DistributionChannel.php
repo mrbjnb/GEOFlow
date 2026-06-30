@@ -103,7 +103,7 @@ class DistributionChannel extends Model
     {
         $type = (string) ($this->channel_type ?? 'geoflow_agent');
 
-        return in_array($type, ['geoflow_agent', 'wordpress_rest', 'generic_http_api'], true) ? $type : 'geoflow_agent';
+        return in_array($type, ['geoflow_agent', 'wordpress_rest', 'generic_http_api', 'blogger', 'facebook_page'], true) ? $type : 'geoflow_agent';
     }
 
     public function isGeoFlowAgent(): bool
@@ -119,6 +119,25 @@ class DistributionChannel extends Model
     public function isGenericHttpApi(): bool
     {
         return $this->channelType() === 'generic_http_api';
+    }
+
+    public function isBlogger(): bool
+    {
+        return $this->channelType() === 'blogger';
+    }
+
+    public function isFacebookPage(): bool
+    {
+        return $this->channelType() === 'facebook_page';
+    }
+
+    /**
+     * Whether this channel type supports remote site settings synchronization.
+     * Social channels (Blogger, Facebook) do not support site settings sync.
+     */
+    public function supportsSiteSettings(): bool
+    {
+        return in_array($this->channelType(), ['geoflow_agent', 'wordpress_rest', 'generic_http_api'], true);
     }
 
     /**
@@ -148,6 +167,35 @@ class DistributionChannel extends Model
             'wordpress_tag_strategy' => in_array($tagStrategy, ['keywords_to_tags', 'disabled'], true) ? $tagStrategy : 'keywords_to_tags',
             'wordpress_image_strategy' => in_array($imageStrategy, ['upload_to_media', 'keep_original'], true) ? $imageStrategy : 'upload_to_media',
             'wordpress_content_format' => 'html',
+        ];
+    }
+
+    /**
+     * @return array{blogger_blog_id:string,blogger_post_status:string,blogger_label_strategy:string}
+     */
+    public function resolvedBloggerConfig(): array
+    {
+        $stored = is_array($this->channel_config) ? $this->channel_config : [];
+        $postStatus = (string) ($stored['blogger_post_status'] ?? 'live');
+        $labelStrategy = (string) ($stored['blogger_label_strategy'] ?? 'keywords_to_labels');
+
+        return [
+            'blogger_blog_id' => trim((string) ($stored['blogger_blog_id'] ?? '')),
+            'blogger_post_status' => in_array($postStatus, ['live', 'draft'], true) ? $postStatus : 'live',
+            'blogger_label_strategy' => in_array($labelStrategy, ['keywords_to_labels', 'disabled'], true) ? $labelStrategy : 'keywords_to_labels',
+        ];
+    }
+
+    /**
+     * @return array{facebook_page_id:string,facebook_char_limit:int}
+     */
+    public function resolvedFacebookConfig(): array
+    {
+        $stored = is_array($this->channel_config) ? $this->channel_config : [];
+
+        return [
+            'facebook_page_id' => trim((string) ($stored['facebook_page_id'] ?? '')),
+            'facebook_char_limit' => min(63206, max(0, (int) ($stored['facebook_char_limit'] ?? config('geoflow.facebook_char_limit', 63206)))),
         ];
     }
 

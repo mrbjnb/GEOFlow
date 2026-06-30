@@ -42,6 +42,10 @@
     } elseif ($channel->isGenericHttpApi()) {
         $genericHealthPath = strtr((string) $genericConfig['generic_health_path'], ['{channel_id}' => (string) $channel->id]);
         $healthCheckUrl = rtrim((string) $channel->endpoint_url, '/').(str_starts_with($genericHealthPath, '/') ? $genericHealthPath : '/'.$genericHealthPath);
+    } elseif ($channel->isBlogger()) {
+        $healthCheckUrl = 'https://blogger.googleapis.com/v3/users/self';
+    } elseif ($channel->isFacebookPage()) {
+        $healthCheckUrl = 'https://graph.facebook.com/'.config('geoflow.facebook_graph_version', 'v24.0').'/'.$channel->resolvedFacebookConfig()['facebook_page_id'].'?fields=name,id';
     }
     $indexAgentBaseUrl = str_ends_with(rtrim((string) $channel->endpoint_url, '/'), '/index.php') ? rtrim((string) $channel->endpoint_url, '/') : rtrim((string) $channel->endpoint_url, '/').'/index.php';
     $indexHealthCheckUrl = $indexAgentBaseUrl.'/geoflow-agent/v1/health';
@@ -87,6 +91,7 @@
                         {{ __('admin.distribution.button.health') }}
                     </button>
                 </form>
+                @if ($channel->supportsSiteSettings())
                 <form method="POST" action="{{ route('admin.distribution.sync-settings', ['channelId' => (int) $channel->id]) }}">
                     @csrf
                     <button type="submit" class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -94,11 +99,12 @@
                         {{ __('admin.distribution.button.sync_settings') }}
                     </button>
                 </form>
+                @endif
             </div>
         </div>
 
         @if (session('distribution_secret'))
-            @php($secret = session('distribution_secret'))
+            @php $secret = session('distribution_secret') @endphp
             <div class="rounded-lg border border-amber-300 bg-amber-50 px-4 py-4">
                 <div class="text-sm font-semibold text-amber-900">{{ __('admin.distribution.secret_notice_title') }}</div>
                 <p class="mt-1 text-sm text-amber-800">{{ __('admin.distribution.secret_notice_desc') }}</p>
@@ -157,6 +163,24 @@
                         <div>
                             <dt class="text-gray-500">{{ __('admin.distribution.generic.publish_endpoint') }}</dt>
                             <dd class="mt-1 break-all font-mono text-sm text-gray-900">{{ $genericConfig['generic_publish_method'] }} {{ $genericConfig['generic_publish_path'] }}</dd>
+                        </div>
+                    @elseif ($channel->isBlogger())
+                        <div>
+                            <dt class="text-gray-500">{{ __('admin.distribution.blogger.blog_id') }}</dt>
+                            <dd class="mt-1 font-medium text-gray-900">{{ $channel->resolvedBloggerConfig()['blogger_blog_id'] ?: __('admin.common.none') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">{{ __('admin.distribution.blogger.post_status') }}</dt>
+                            <dd class="mt-1 font-medium text-gray-900">{{ __('admin.distribution.blogger.post_status_'.$channel->resolvedBloggerConfig()['blogger_post_status']) }}</dd>
+                        </div>
+                    @elseif ($channel->isFacebookPage())
+                        <div>
+                            <dt class="text-gray-500">{{ __('admin.distribution.facebook.page_id') }}</dt>
+                            <dd class="mt-1 font-medium text-gray-900">{{ $channel->resolvedFacebookConfig()['facebook_page_id'] ?: __('admin.common.none') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">{{ __('admin.distribution.facebook.char_limit') }}</dt>
+                            <dd class="mt-1 font-medium text-gray-900">{{ $channel->resolvedFacebookConfig()['facebook_char_limit'] }}</dd>
                         </div>
                     @endif
                     <div>
@@ -223,7 +247,7 @@
             </div>
             <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                 @foreach (['content_top' => __('admin.distribution.article_text_ads.placement_top'), 'content_bottom' => __('admin.distribution.article_text_ads.placement_bottom')] as $placement => $placementLabel)
-                    @php($mode = (string) ($articleTextAdPolicy[$placement]['mode'] ?? 'inherit'))
+                    @php $mode = (string) ($articleTextAdPolicy[$placement]['mode'] ?? 'inherit') @endphp
                     <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4">
                         <div class="text-sm font-semibold text-gray-900">{{ $placementLabel }}</div>
                         <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-600">
@@ -421,6 +445,59 @@
                     </div>
                 </div>
             </div>
+        @elseif ($channel->isBlogger())
+            <div class="rounded-lg bg-white p-6 shadow">
+                <div class="max-w-3xl">
+                    <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.blogger.guide_title') }}</h2>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{{ __('admin.distribution.blogger.guide_desc') }}</p>
+                </div>
+                <ol class="mt-6 grid grid-cols-1 gap-4 text-sm text-gray-700 md:grid-cols-2 xl:grid-cols-4">
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">1</span>
+                        <span>{{ __('admin.distribution.blogger.token_help') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">2</span>
+                        <span>{{ __('admin.distribution.blogger.section_desc') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">3</span>
+                        <span>{{ __('admin.distribution.detail.agent_step_health') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">4</span>
+                        <span>{{ __('admin.distribution.detail.agent_step_task') }}</span>
+                    </li>
+                </ol>
+            </div>
+        @elseif ($channel->isFacebookPage())
+            <div class="rounded-lg bg-white p-6 shadow">
+                <div class="max-w-3xl">
+                    <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.facebook.guide_title') }}</h2>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">{{ __('admin.distribution.facebook.guide_desc') }}</p>
+                </div>
+                <div class="mt-4 rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+                    {{ __('admin.distribution.facebook.char_limit_warning') }}
+                </div>
+                <ol class="mt-6 grid grid-cols-1 gap-4 text-sm text-gray-700 md:grid-cols-2 xl:grid-cols-4">
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-700">1</span>
+                        <span>{{ __('admin.distribution.facebook.token_help') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-700">2</span>
+                        <span>{{ __('admin.distribution.facebook.section_desc') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-700">3</span>
+                        <span>{{ __('admin.distribution.detail.agent_step_health') }}</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-700">4</span>
+                        <span>{{ __('admin.distribution.detail.agent_step_task') }}</span>
+                    </li>
+                </ol>
+            </div>
         @endif
 
         <div class="rounded-lg bg-white shadow">
@@ -439,8 +516,8 @@
             @else
                 <div class="divide-y divide-gray-200">
                     @foreach ($logs as $log)
-                        @php($logLevelKey = 'admin.distribution.log_level.'.(string) $log->level)
-                        @php($logLevelLabel = trans()->has($logLevelKey) ? __($logLevelKey) : (string) $log->level)
+                        @php $logLevelKey = 'admin.distribution.log_level.'.(string) $log->level @endphp
+                        @php $logLevelLabel = trans()->has($logLevelKey) ? __($logLevelKey) : (string) $log->level @endphp
                         <div class="px-6 py-4 text-sm">
                             <div class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                                 <div class="min-w-0">

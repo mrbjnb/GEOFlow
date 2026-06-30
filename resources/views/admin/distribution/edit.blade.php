@@ -251,6 +251,77 @@
                                 </div>
                             </div>
                         </div>
+                    @elseif ($channel->isBlogger())
+                        <div class="rounded-lg border border-green-100 bg-green-50 p-5">
+                            <div class="mb-5">
+                                <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.blogger.section_title') }}</h2>
+                                <p class="mt-1 text-sm leading-6 text-gray-600">{{ __('admin.distribution.blogger.edit_section_desc') }}</p>
+                            </div>
+                            @php $bloggerConfig = $channel->resolvedBloggerConfig() @endphp
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <div>
+                                    <label for="blogger_blog_id" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.blogger.blog_id') }}</label>
+                                    <input id="blogger_blog_id" name="blogger_blog_id" type="text" value="{{ old('blogger_blog_id', $bloggerConfig['blogger_blog_id']) }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="blogger_post_status" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.blogger.post_status') }}</label>
+                                    <select id="blogger_post_status" name="blogger_post_status" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="live" @selected(old('blogger_post_status', $bloggerConfig['blogger_post_status']) === 'live')>{{ __('admin.distribution.blogger.post_status_live') }}</option>
+                                        <option value="draft" @selected(old('blogger_post_status', $bloggerConfig['blogger_post_status']) === 'draft')>{{ __('admin.distribution.blogger.post_status_draft') }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="blogger_label_strategy" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.blogger.label_strategy') }}</label>
+                                    <select id="blogger_label_strategy" name="blogger_label_strategy" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="keywords_to_labels" @selected(old('blogger_label_strategy', $bloggerConfig['blogger_label_strategy']) === 'keywords_to_labels')>{{ __('admin.distribution.blogger.label_keywords') }}</option>
+                                        <option value="disabled" @selected(old('blogger_label_strategy', $bloggerConfig['blogger_label_strategy']) === 'disabled')>{{ __('admin.distribution.blogger.label_disabled') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-6 border-t border-green-200 pt-5">
+                                <h4 class="text-sm font-medium text-gray-900">{{ __('admin.distribution.blogger.access_token') }}</h4>
+                                <p class="mt-1 text-sm text-gray-600">{{ __('admin.distribution.blogger.token_help') }}</p>
+                                <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <input id="blogger_access_token" name="blogger_access_token" type="password" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" autocomplete="new-password" placeholder="{{ __('admin.distribution.blogger.token_placeholder') }}">
+                                    </div>
+                                    <div>
+                                        <input id="blogger_refresh_token" name="blogger_refresh_token" type="password" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" autocomplete="new-password" placeholder="{{ __('admin.distribution.blogger.token_placeholder') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @elseif ($channel->isFacebookPage())
+                        <div class="rounded-lg border border-amber-100 bg-amber-50 p-5">
+                            <div class="mb-5">
+                                <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.facebook.section_title') }}</h2>
+                                <p class="mt-1 text-sm leading-6 text-gray-600">{{ __('admin.distribution.facebook.edit_section_desc') }}</p>
+                            </div>
+                            @php $facebookConfig = $channel->resolvedFacebookConfig() @endphp
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <div>
+                                    <label for="facebook_page_id" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.facebook.page_id') }}</label>
+                                    <input id="facebook_page_id" name="facebook_page_id" type="text" value="{{ old('facebook_page_id', $facebookConfig['facebook_page_id']) }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label for="facebook_char_limit" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.facebook.char_limit') }}</label>
+                                    <input id="facebook_char_limit" name="facebook_char_limit" type="number" min="0" max="63206" value="{{ old('facebook_char_limit', $facebookConfig['facebook_char_limit']) }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <p class="mt-1 text-xs text-gray-500">{{ __('admin.distribution.facebook.char_limit_help') }}</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 border-t border-amber-200 pt-5">
+                                <h4 class="text-sm font-medium text-gray-900">{{ __('admin.distribution.facebook.access_token') }}</h4>
+                                <p class="mt-1 text-sm text-gray-600">{{ __('admin.distribution.facebook.token_help') }}</p>
+                                <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <input id="facebook_access_token" name="facebook_access_token" type="password" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" autocomplete="new-password" placeholder="{{ __('admin.distribution.facebook.token_placeholder') }}">
+                                    </div>
+                                    <div>
+                                        <input id="facebook_refresh_token" name="facebook_refresh_token" type="password" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" autocomplete="new-password" placeholder="{{ __('admin.distribution.facebook.token_placeholder') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     @elseif ($channel->isGeoFlowAgent())
                         <fieldset class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                             <legend class="text-sm font-medium text-gray-900">{{ __('admin.distribution.field.front_mode') }}</legend>
@@ -276,6 +347,7 @@
                         @include('admin.distribution._rewrite-rules', ['channel' => $channel])
                     @endif
 
+                    @if ($channel->supportsSiteSettings())
                     <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
                         <div class="mb-5">
                             <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.remote_site.section_title') }}</h2>
@@ -395,6 +467,7 @@
                             </div>
                         @endif
                     </div>
+                    @endif
 
                     <div class="rounded-lg border border-gray-200 bg-white p-5">
                         <div class="mb-5">

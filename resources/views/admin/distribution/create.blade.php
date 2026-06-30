@@ -50,7 +50,7 @@
                     <fieldset class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                         <legend class="text-sm font-medium text-gray-900">{{ __('admin.distribution.field.channel_type') }}</legend>
                         <p class="mt-1 text-sm text-gray-600">{{ __('admin.distribution.help.channel_type') }}</p>
-                        <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+                        <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-5">
                             <label class="flex cursor-pointer gap-3 rounded-md border border-gray-200 bg-white p-4 hover:border-blue-300">
                                 <input type="radio" name="channel_type" value="geoflow_agent" class="mt-1 text-blue-600 focus:ring-blue-500" @checked($channelType === 'geoflow_agent')>
                                 <span>
@@ -70,6 +70,20 @@
                                 <span>
                                     <span class="block text-sm font-semibold text-gray-900">{{ __('admin.distribution.channel_type.generic_http_api') }}</span>
                                     <span class="mt-1 block text-sm text-gray-600">{{ __('admin.distribution.channel_type.generic_http_api_desc') }}</span>
+                                </span>
+                            </label>
+                            <label class="flex cursor-pointer gap-3 rounded-md border border-gray-200 bg-white p-4 hover:border-blue-300">
+                                <input type="radio" name="channel_type" value="blogger" class="mt-1 text-blue-600 focus:ring-blue-500" @checked($channelType === 'blogger')>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-900">{{ __('admin.distribution.channel_type.blogger') }}</span>
+                                    <span class="mt-1 block text-sm text-gray-600">{{ __('admin.distribution.channel_type.blogger_desc') }}</span>
+                                </span>
+                            </label>
+                            <label class="flex cursor-pointer gap-3 rounded-md border border-gray-200 bg-white p-4 hover:border-blue-300">
+                                <input type="radio" name="channel_type" value="facebook_page" class="mt-1 text-blue-600 focus:ring-blue-500" @checked($channelType === 'facebook_page')>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-900">{{ __('admin.distribution.channel_type.facebook_page') }}</span>
+                                    <span class="mt-1 block text-sm text-gray-600">{{ __('admin.distribution.channel_type.facebook_page_desc') }}</span>
                                 </span>
                             </label>
                         </div>
@@ -298,6 +312,80 @@
                                 </label>
                             </div>
                         </fieldset>
+                    </div>
+
+                    <div data-channel-type-panel="blogger" @class(['rounded-lg border border-green-100 bg-green-50 p-5', 'hidden' => $channelType !== 'blogger'])>
+                        <div class="mb-5">
+                            <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.blogger.section_title') }}</h2>
+                            <p class="mt-1 text-sm leading-6 text-gray-600">{{ __('admin.distribution.blogger.section_desc') }}</p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div>
+                                <label for="blogger_blog_id" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.blogger.blog_id') }} *</label>
+                                <input id="blogger_blog_id" name="blogger_blog_id" type="text" value="{{ old('blogger_blog_id') }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <p class="mt-1 text-xs text-gray-500">{{ __('admin.distribution.blogger.blog_id_help') }}</p>
+                            </div>
+                            <div>
+                                <label for="blogger_post_status" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.blogger.post_status') }}</label>
+                                <select id="blogger_post_status" name="blogger_post_status" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="live" @selected(old('blogger_post_status', 'live') === 'live')>{{ __('admin.distribution.blogger.post_status_live') }}</option>
+                                    <option value="draft" @selected(old('blogger_post_status') === 'draft')>{{ __('admin.distribution.blogger.post_status_draft') }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="blogger_label_strategy" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.blogger.label_strategy') }}</label>
+                                <select id="blogger_label_strategy" name="blogger_label_strategy" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="keywords_to_labels" @selected(old('blogger_label_strategy', 'keywords_to_labels') === 'keywords_to_labels')>{{ __('admin.distribution.blogger.label_keywords') }}</option>
+                                    <option value="disabled" @selected(old('blogger_label_strategy') === 'disabled')>{{ __('admin.distribution.blogger.label_disabled') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 border-t border-green-200 pt-4">
+                            <h4 class="text-sm font-medium text-gray-900">{{ __('admin.distribution.blogger.access_token') }} *</h4>
+                            <p class="mt-1 text-sm text-gray-600">{{ __('admin.distribution.blogger.token_help') }}</p>
+                            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <input id="blogger_access_token" name="blogger_access_token" type="password" value="{{ old('blogger_access_token') }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="{{ __('admin.distribution.blogger.access_token') }}">
+                                </div>
+                                <div>
+                                    <input id="blogger_refresh_token" name="blogger_refresh_token" type="password" value="{{ old('blogger_refresh_token') }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="{{ __('admin.distribution.blogger.refresh_token') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div data-channel-type-panel="facebook_page" @class(['rounded-lg border border-amber-100 bg-amber-50 p-5', 'hidden' => $channelType !== 'facebook_page'])>
+                        <div class="mb-5">
+                            <h2 class="text-lg font-medium text-gray-900">{{ __('admin.distribution.facebook.section_title') }}</h2>
+                            <p class="mt-1 text-sm leading-6 text-gray-600">{{ __('admin.distribution.facebook.section_desc') }}</p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div>
+                                <label for="facebook_page_id" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.facebook.page_id') }} *</label>
+                                <input id="facebook_page_id" name="facebook_page_id" type="text" value="{{ old('facebook_page_id') }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <p class="mt-1 text-xs text-gray-500">{{ __('admin.distribution.facebook.page_id_help') }}</p>
+                            </div>
+                            <div>
+                                <label for="facebook_char_limit" class="block text-sm font-medium text-gray-700">{{ __('admin.distribution.facebook.char_limit') }}</label>
+                                <input id="facebook_char_limit" name="facebook_char_limit" type="number" min="0" max="63206" value="{{ old('facebook_char_limit', 63206) }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <p class="mt-1 text-xs text-gray-500">{{ __('admin.distribution.facebook.char_limit_help') }}</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
+                            {{ __('admin.distribution.facebook.char_limit_warning') }}
+                        </div>
+                        <div class="mt-4 border-t border-amber-200 pt-4">
+                            <h4 class="text-sm font-medium text-gray-900">{{ __('admin.distribution.facebook.access_token') }} *</h4>
+                            <p class="mt-1 text-sm text-gray-600">{{ __('admin.distribution.facebook.token_help') }}</p>
+                            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <input id="facebook_access_token" name="facebook_access_token" type="password" value="{{ old('facebook_access_token') }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="{{ __('admin.distribution.facebook.access_token') }}">
+                                </div>
+                                <div>
+                                    <input id="facebook_refresh_token" name="facebook_refresh_token" type="password" value="{{ old('facebook_refresh_token') }}" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="{{ __('admin.distribution.facebook.refresh_token') }}">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">

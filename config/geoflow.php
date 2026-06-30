@@ -119,6 +119,14 @@ return [
     // CSRF 隐藏字段/input 名
     'csrf_token_name' => env('GEOFLOW_CSRF_TOKEN_NAME', 'csrf_token'),
 
+    // 社交媒体分发 OAuth 应用凭据（全局，所有同类型渠道共用）
+    'facebook_app_id' => env('FACEBOOK_APP_ID', ''),
+    'facebook_app_secret' => env('FACEBOOK_APP_SECRET', ''),
+    'facebook_graph_version' => env('FACEBOOK_GRAPH_VERSION', 'v24.0'),
+    'facebook_char_limit' => (int) env('FACEBOOK_CHAR_LIMIT', 63206),
+    'google_client_id' => env('GOOGLE_CLIENT_ID', ''),
+    'google_client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
+
     // ai_models API Key enc:v1 根材料（仅在此读取 APP_KEY；应用代码禁止 env()，统一 config('geoflow.api_key_crypto_roots')）
     'api_key_crypto_roots' => array_values(array_filter([(string) env('APP_KEY', '')])),
 

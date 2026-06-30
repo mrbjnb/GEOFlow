@@ -30,8 +30,21 @@ The `task_runs` table is the single source of truth for execution state (pending
 DistributionPublisherInterface
 ├── GeoFlowAgentPublisher
 ├── WordPressRestPublisher
-└── GenericHttpApiPublisher
+├── GenericHttpApiPublisher
+├── BloggerPublisher         (Blogger API v3 — added June 2026)
+└── FacebookPagePublisher    (Facebook Graph API v24 — added June 2026)
 ```
+
+### OAuth2 Token Refresh Pattern (Social Distribution)
+```php
+OAuthTokenRefreshService
+├── ensureValidToken()       — Checks expiry, auto-refreshes if needed
+│   ├── refreshGoogleToken() — POST oauth2.googleapis.com/token
+│   └── refreshFacebookToken() — GET graph.facebook.com/.../oauth/access_token
+└── encryptInitialCredentials() — Stores token envelope {access_token, refresh_token, expires_at, token_type} encrypted via ApiKeyCrypto
+```
+
+Social publishers do NOT support `syncSiteSettings()` — returns no-op. The model method `supportsSiteSettings(): bool` controls visibility of site settings UI in Blade views.
 
 ### Entrypoint Pattern
 `docker/entrypoint.sh` handles:

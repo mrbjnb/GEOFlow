@@ -12,6 +12,7 @@ use App\Models\DistributionLog;
 use App\Services\GeoFlow\DistributionOrchestrator;
 use App\Services\GeoFlow\DistributionPublisherManager;
 use App\Services\GeoFlow\DistributionTargetSitePackageBuilder;
+use App\Services\GeoFlow\OAuthTokenRefreshService;
 use App\Support\AdminWeb;
 use App\Support\GeoFlow\ApiKeyCrypto;
 use App\Support\Site\ArticleTextAdPicker;
@@ -32,6 +33,7 @@ class DistributionController extends Controller
         private readonly DistributionOrchestrator $distributionOrchestrator,
         private readonly DistributionPublisherManager $publisherManager,
         private readonly ApiKeyCrypto $apiKeyCrypto,
+        private readonly OAuthTokenRefreshService $oauthTokenRefreshService,
         private readonly DistributionTargetSitePackageBuilder $targetSitePackageBuilder,
         private readonly SiteThemeCatalog $siteThemeCatalog,
     ) {}
@@ -119,6 +121,22 @@ class DistributionController extends Controller
             if ($channel->resolvedGenericHttpConfig()['generic_auth_type'] !== 'none') {
                 $this->createGenericHttpSecret($channel, (string) $payload['generic_secret']);
             }
+
+            return redirect()
+                ->route('admin.distribution.show', ['channelId' => (int) $channel->id])
+                ->with('message', __('admin.distribution.message.created'));
+        }
+
+        if ($channel->isBlogger()) {
+            $this->createBloggerSecret($channel, (string) $payload['blogger_access_token'], (string) ($payload['blogger_refresh_token'] ?? ''));
+
+            return redirect()
+                ->route('admin.distribution.show', ['channelId' => (int) $channel->id])
+                ->with('message', __('admin.distribution.message.created'));
+        }
+
+        if ($channel->isFacebookPage()) {
+            $this->createFacebookSecret($channel, (string) $payload['facebook_access_token'], (string) ($payload['facebook_refresh_token'] ?? ''));
 
             return redirect()
                 ->route('admin.distribution.show', ['channelId' => (int) $channel->id])
@@ -216,10 +234,24 @@ class DistributionController extends Controller
                 $this->createGenericHttpSecret($channel, (string) $payload['generic_secret']);
             }
         }
+        if ($channel->isBlogger() && filled($payload['blogger_access_token'] ?? null)) {
+            DistributionChannelSecret::query()
+                ->where('distribution_channel_id', (int) $channel->id)
+                ->where('status', 'active')
+                ->update(['status' => 'revoked']);
+            $this->createBloggerSecret($channel, (string) $payload['blogger_access_token'], (string) ($payload['blogger_refresh_token'] ?? ''));
+        }
+        if ($channel->isFacebookPage() && filled($payload['facebook_access_token'] ?? null)) {
+            DistributionChannelSecret::query()
+                ->where('distribution_channel_id', (int) $channel->id)
+                ->where('status', 'active')
+                ->update(['status' => 'revoked']);
+            $this->createFacebookSecret($channel, (string) $payload['facebook_access_token'], (string) ($payload['facebook_refresh_token'] ?? ''));
+        }
 
         $message = __('admin.distribution.message.updated');
         $channel->load('activeSecret');
-        if ($channel->activeSecret || ($channel->isGenericHttpApi() && $channel->resolvedGenericHttpConfig()['generic_auth_type'] === 'none')) {
+        if (($channel->activeSecret && $channel->supportsSiteSettings()) || ($channel->isGenericHttpApi() && $channel->resolvedGenericHttpConfig()['generic_auth_type'] === 'none')) {
             try {
                 $this->syncChannelSiteSettings($channel);
                 $message = __('admin.distribution.message.updated_and_settings_synced');
@@ -829,7 +861,7 @@ class DistributionController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'domain' => ['required', 'string', 'max:255'],
             'endpoint_url' => ['required', 'string', 'max:500'],
-            'channel_type' => ['nullable', 'string', 'in:geoflow_agent,wordpress_rest,generic_http_api'],
+            'channel_type' => ['nullable', 'string', 'in:geoflow_agent,wordpress_rest,generic_http_api,blogger,facebook_page'],
             'front_mode' => ['nullable', 'string', 'in:static,rewrite'],
             'template_key' => ['nullable', 'string', 'max:120'],
             'status' => ['required', 'string', 'in:active,paused'],
@@ -865,6 +897,15 @@ class DistributionController extends Controller
             'generic_remote_id_path' => ['nullable', 'string', 'max:120'],
             'generic_remote_url_path' => ['nullable', 'string', 'max:120'],
             'generic_payload_wrapper' => ['nullable', 'string', 'in:none,data'],
+            'blogger_blog_id' => ['nullable', 'string', 'max:120'],
+            'blogger_post_status' => ['nullable', 'string', 'in:live,draft'],
+            'blogger_label_strategy' => ['nullable', 'string', 'in:keywords_to_labels,disabled'],
+            'blogger_access_token' => ['nullable', 'string', 'max:5000'],
+            'blogger_refresh_token' => ['nullable', 'string', 'max:5000'],
+            'facebook_page_id' => ['nullable', 'string', 'max:120'],
+            'facebook_char_limit' => ['nullable', 'integer', 'min:0', 'max:63206'],
+            'facebook_access_token' => ['nullable', 'string', 'max:5000'],
+            'facebook_refresh_token' => ['nullable', 'string', 'max:5000'],
             'site_name' => ['nullable', 'string', 'max:120'],
             'site_subtitle' => ['nullable', 'string', 'max:255'],
             'site_description' => ['nullable', 'string'],
@@ -961,6 +1002,30 @@ class DistributionController extends Controller
                     ]);
                 }
                 $payload[$field] = $path;
+            }
+        }
+        if ($payload['channel_type'] === 'blogger') {
+            if (! filled($payload['blogger_blog_id'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'blogger_blog_id' => __('admin.distribution.validation.blogger_blog_id'),
+                ]);
+            }
+            if ($request->isMethod('post') && ! filled($payload['blogger_access_token'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'blogger_access_token' => __('admin.distribution.validation.blogger_access_token'),
+                ]);
+            }
+        }
+        if ($payload['channel_type'] === 'facebook_page') {
+            if (! filled($payload['facebook_page_id'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'facebook_page_id' => __('admin.distribution.validation.facebook_page_id'),
+                ]);
+            }
+            if ($request->isMethod('post') && ! filled($payload['facebook_access_token'] ?? null)) {
+                throw ValidationException::withMessages([
+                    'facebook_access_token' => __('admin.distribution.validation.facebook_access_token'),
+                ]);
             }
         }
 
@@ -1226,6 +1291,25 @@ class DistributionController extends Controller
             ];
         }
 
+        if ($channelType === 'blogger') {
+            $defaults = $channel?->resolvedBloggerConfig() ?? (new DistributionChannel)->resolvedBloggerConfig();
+
+            return [
+                'blogger_blog_id' => trim((string) ($payload['blogger_blog_id'] ?? $defaults['blogger_blog_id'])),
+                'blogger_post_status' => (string) ($payload['blogger_post_status'] ?? $defaults['blogger_post_status']),
+                'blogger_label_strategy' => (string) ($payload['blogger_label_strategy'] ?? $defaults['blogger_label_strategy']),
+            ];
+        }
+
+        if ($channelType === 'facebook_page') {
+            $defaults = $channel?->resolvedFacebookConfig() ?? (new DistributionChannel)->resolvedFacebookConfig();
+
+            return [
+                'facebook_page_id' => trim((string) ($payload['facebook_page_id'] ?? $defaults['facebook_page_id'])),
+                'facebook_char_limit' => (int) ($payload['facebook_char_limit'] ?? $defaults['facebook_char_limit']),
+            ];
+        }
+
         if ($channelType !== 'wordpress_rest') {
             return [
                 'article_text_ad_policy' => $articleTextAdPolicy,
@@ -1311,6 +1395,30 @@ class DistributionController extends Controller
             'secret_ciphertext' => $this->apiKeyCrypto->encrypt($secret),
             'status' => 'active',
             'scopes' => ['generic.http'],
+        ]);
+    }
+
+    private function createBloggerSecret(DistributionChannel $channel, string $accessToken, string $refreshToken): void
+    {
+        $ciphertext = $this->oauthTokenRefreshService->encryptInitialCredentials($accessToken, $refreshToken, now()->addHour()->toIso8601String());
+        DistributionChannelSecret::query()->create([
+            'distribution_channel_id' => (int) $channel->id,
+            'key_id' => 'blog_'.Str::lower(Str::random(18)),
+            'secret_ciphertext' => $ciphertext,
+            'status' => 'active',
+            'scopes' => ['blogger.posts'],
+        ]);
+    }
+
+    private function createFacebookSecret(DistributionChannel $channel, string $accessToken, string $refreshToken): void
+    {
+        $ciphertext = $this->oauthTokenRefreshService->encryptInitialCredentials($accessToken, $refreshToken, now()->addDays(60)->toIso8601String());
+        DistributionChannelSecret::query()->create([
+            'distribution_channel_id' => (int) $channel->id,
+            'key_id' => 'fb_'.Str::lower(Str::random(18)),
+            'secret_ciphertext' => $ciphertext,
+            'status' => 'active',
+            'scopes' => ['facebook.page_manage'],
         ]);
     }
 
